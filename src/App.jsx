@@ -1,48 +1,56 @@
-import Description from "./components/Description/Description"
-import Options from "./components/Options/Options"
-import Feedback from "./components/Feedback/Feedback"
-import { useState } from "react"
+import Description from "./components/Description/Description";
+import Options from "./components/Options/Options";
+import Feedback from "./components/Feedback/Feedback";
+import Notification from "./components/Notification/Notification";
+import { useEffect, useState } from "react";
 
 
 function App() {
 
-  const [feedback, setFeedback] = useState({
-    good: 0,
-    neutral: 0,
-    bad: 0
-  })
-  
-  const updateGood = () => {
-    setFeedback({
-      good: feedback.good += 1,
-      ...feedback
-    });
-  }
+  const [values, setValues] = useState(() => {    
+    
+    const savedFeedback = JSON.parse(localStorage.getItem("feedback"))
 
-    const updateBad = () => {
-      setFeedback({
-    ...feedback,
-     bad: feedback.bad += 1
-    });
+    if (savedFeedback !== null) {
+      return savedFeedback
     }
+
+    return{
+      good: 0,
+      neutral: 0,
+      bad:0
+    }
+
+  });
   
-      const updateNeutral = () => {
-      setFeedback({
-    ...feedback,
-     neutral: feedback.neutral += 1
+  const onLeaveFeedback = (option) => {
+    setValues({
+      ...values,
+      [option]: values[option] + 1
     });
-  }
+  };
 
-
-
-  console.log(feedback)
-    return <>
-      <Description></Description>
-      <Options updateGood={updateGood} updateBad={updateBad } updateNeutral={updateNeutral}></Options>
-      <Feedback feedback={feedback}></Feedback>
-    </>
+  useEffect(() => {
+    localStorage.setItem("feedback", JSON.stringify(values))
+  }, [values])
   
+  const { good, neutral, bad } = values;
+  const totalFeedback = bad + good + neutral;
+
+  const resetFeedback = () => {
+    setValues({
+      good: 0,
+      neutral: 0,
+      bad:0
+    })
   }
 
+  return <>
+    <Description></Description>
+    <Options feedback={onLeaveFeedback} totalFeedback={totalFeedback} reset={resetFeedback} ></Options>
+    <>{totalFeedback === 0 ? <Notification message={"No feedback yet"}/> : <Feedback values={values} totalFeedback={totalFeedback}/>}</>
+  </>;
+}
 
-export default App
+
+export default App;
